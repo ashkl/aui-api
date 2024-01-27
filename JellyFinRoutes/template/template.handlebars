@@ -1,0 +1,26 @@
+{
+    "Username": "{{{NotificationUsername}}}",
+    "NotificationType": "{{{NotificationType}}}",
+    {{#if_equals NotificationType 'PlaybackStart'}}    
+    {{#if_equals ItemType 'Episode'}}
+    "media": "{{{SeriesName}}} S{{SeasonNumber00}}E{{EpisodeNumber00}}",
+    "message": "{{{NotificationUsername}}} started playing: {{{SeriesName}}} S{{SeasonNumber00}}E{{EpisodeNumber00}}",
+    {{else}}
+    "media": "{{{Name}}} - ({{Year}})",
+    "message": "{{{NotificationUsername}}} started playing: {{{Name}}} - ({{Year}})",
+    {{/if_equals}}   
+    {{/if_equals}}
+    {{#if_equals NotificationType 'PlaybackStop'}}    
+    {{#if_equals ItemType 'Episode'}}
+    "media": "{{{SeriesName}}} S{{SeasonNumber00}}E{{EpisodeNumber00}}",
+    "message": "{{{NotificationUsername}}} stopped playing: {{{SeriesName}}} S{{SeasonNumber00}}E{{EpisodeNumber00}}",
+    {{else}}
+    "media": "{{{Name}}} - ({{Year}})",
+    "message": "{{{NotificationUsername}}} stopped playing: {{{Name}}} - ({{Year}})",
+    {{/if_equals}}   
+    {{/if_equals}}
+    {{#if_equals NotificationType 'SessionStart'}}
+    "message": "{{{NotificationUsername}}} has connected",
+    {{/if_equals}}
+    "Timestamp": "{{{Timestamp}}}"
+}
