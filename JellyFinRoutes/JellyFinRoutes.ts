@@ -10,37 +10,45 @@ router.get('/jellyfin/playbacks', async(req, res) => {
 
     const response: any = [];
 
-    if (playbackData[0].NowPlayingQueue.length === 0 ) {
-        res.send(response)
-    } else {
-        for (let i=0; i < playbackData.length; i++) {
-            let media: string;
+    try {
 
-            if ( 'SeriesName' in playbackData[i].NowPlayingItem) {
-                media = `${playbackData[i].NowPlayingItem.SeriesName} S${playbackData[i].NowPlayingItem.ParentIndexNumber}E${playbackData[i].NowPlayingItem.IndexNumber}`;
-            } else {
-                media = `${playbackData[i].NowPlayingItem.Name} (${playbackData[i].NowPlayingItem.ProductionYear})`;
-            }
-
-            if (playbackData[i].PlayState.PlayMethod == 'DirectPlay') {
-                const item: PlaybacksResponse = {
-                    media: media,
-                    directplay: true,
+        if (playbackData[0].NowPlayingQueue.length === 0 ) {
+            res.send(response)
+        } else {
+            for (let i=0; i < playbackData.length; i++) {
+                let media: string;
+    
+                if ( 'SeriesName' in playbackData[i].NowPlayingItem) {
+                    media = `${playbackData[i].NowPlayingItem.SeriesName} S${playbackData[i].NowPlayingItem.ParentIndexNumber}E${playbackData[i].NowPlayingItem.IndexNumber}`;
+                } else {
+                    media = `${playbackData[i].NowPlayingItem.Name} (${playbackData[i].NowPlayingItem.ProductionYear})`;
                 }
-                response.push(item);
-            } else {
-                const item: PlaybacksResponse = {
-                    media: media,
-                    directplay: false,
-                    IsVideoDirect: playbackData[i].TranscodingInfo.IsVideoDirect,
-                    IsAudioDirect: playbackData[i].TranscodingInfo.IsAudioDirect,
-                    CompletionPercentage: playbackData[i].TranscodingInfo.CompletionPercentage
+    
+                if (playbackData[i].PlayState.PlayMethod == 'DirectPlay') {
+                    const item: PlaybacksResponse = {
+                        media: media,
+                        directplay: true,
+                    }
+                    response.push(item);
+                } else {
+                    const item: PlaybacksResponse = {
+                        media: media,
+                        directplay: false,
+                        IsVideoDirect: playbackData[i].TranscodingInfo.IsVideoDirect,
+                        IsAudioDirect: playbackData[i].TranscodingInfo.IsAudioDirect,
+                        CompletionPercentage: playbackData[i].TranscodingInfo.CompletionPercentage
+                    }
+                    response.push(item);
                 }
-                response.push(item);
             }
+            res.send(response);
         }
-        res.send(response)
+        
+    } catch (error) {
+        res.status(500).send(error);
     }
+
+    
 })
 
 router.post('/jellyfin/webhook', async (req, res) => {

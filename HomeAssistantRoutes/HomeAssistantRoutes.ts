@@ -6,29 +6,41 @@ import { fetchHomeAssistantData, toggleLight } from "./utils";
 const router: express.Router = express();
 
 router.get('/homeassistant/power', async (req, res) => {
-    const mainPCData = await fetchHomeAssistantData('/states/sensor.main_pc_power');
-    const homelabServerData = await fetchHomeAssistantData('/states/sensor.hl_server_power');
-    const ogServerData = await fetchHomeAssistantData('/states/sensor.og_server_power');
 
-    const responseData = {
-        mainPCPower: mainPCData.state,
-        homelabServerPower: homelabServerData.state,
-        ogServerPower: ogServerData.state,
+    try {
+     
+        const mainPCData = await fetchHomeAssistantData('/states/sensor.main_pc_power');
+        const homelabServerData = await fetchHomeAssistantData('/states/sensor.hl_server_power');
+        const ogServerData = await fetchHomeAssistantData('/states/sensor.og_server_power');
+
+        const responseData = {
+            mainPCPower: mainPCData.state,
+            homelabServerPower: homelabServerData.state,
+            ogServerPower: ogServerData.state,
+        }
+        res.send(responseData);
+        
+    } catch (error) {
+        res.status(500).send(error);
     }
-
-    res.send(responseData);
 })
 
 router.get('/homeassistant/roomTemp', async (req, res) => {
-    const tempData = await fetchHomeAssistantData('/states/sensor.wifi_temperature_humidity_sensor_temperature');
-    const humidityData = await fetchHomeAssistantData('/states/sensor.wifi_temperature_humidity_sensor_humidity');
+    try {
 
-    const responseData = {
-        temp: tempData.state,
-        humidity: humidityData.state
+        const tempData = await fetchHomeAssistantData('/states/sensor.wifi_temperature_humidity_sensor_temperature');
+        const humidityData = await fetchHomeAssistantData('/states/sensor.wifi_temperature_humidity_sensor_humidity');
+    
+        const responseData = {
+            temp: tempData.state,
+            humidity: humidityData.state
+        }
+    
+        res.send(responseData);
+        
+    } catch (error) {
+        res.status(500).send(error);
     }
-
-    res.send(responseData);
 })
 
 router.post('/homeassistant/toggleRoomLight', async (req, res) => {
@@ -39,8 +51,7 @@ router.post('/homeassistant/toggleRoomLight', async (req, res) => {
 
         res.send(response)
     } catch (error) {
-        console.error('Error in toggleRoomLight route:', error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send(error);
     }
     
 })
