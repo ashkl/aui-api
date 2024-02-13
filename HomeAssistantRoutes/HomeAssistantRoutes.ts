@@ -7,7 +7,7 @@ const router: express.Router = express();
 
 router.get('/homeassistant/power', async (req, res) => {
     const mainPCData = await fetchHomeAssistantData('/states/sensor.main_pc_power');
-    const homelabServerData = await fetchHomeAssistantData('/states/sensor.smart_socket_3_power');
+    const homelabServerData = await fetchHomeAssistantData('/states/sensor.hl_server_power');
     const ogServerData = await fetchHomeAssistantData('/states/sensor.og_server_power');
 
     const responseData = {
