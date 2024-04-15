@@ -2,10 +2,22 @@ var axios = require("axios");
 import { AxiosError } from 'axios';
 import config from "../config";
 
-export async function fetchProxmoxData(url:string) {
+export async function fetchProxmoxData(server:string, url:string) {
+
+    let SERVER_URL;
+    let SERVER_KEY;
+
+    if (server === "prod"){
+        SERVER_URL = config.PROD_URL;
+        SERVER_KEY = config.PROD_KEY;
+    } else {
+        SERVER_URL = config.NAS_URL;
+        SERVER_KEY = config.NAS_KEY;
+    }
+
     try {
-        const apiUrl = `https://${config.PROXMOX_URL}/api2/json${url}`;
-        const authToken = config.PROXMOX_KEY;
+        const apiUrl = `https://${SERVER_URL}/api2/json${url}`;
+        const authToken = SERVER_KEY;
 
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 

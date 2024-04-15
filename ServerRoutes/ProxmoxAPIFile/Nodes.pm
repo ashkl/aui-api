@@ -409,7 +409,8 @@ __PACKAGE__->register_method({
 
 	my $temperature_output = `sensors -j`;
 	my $sensor_data = decode_json($temperature_output);
-	my $cpu_temp = $sensor_data->{'k10temp-pci-00c3'}{'Tctl'}{temp1_input}; #This line might need to changed depending on your CPU/Motherboard.
+	my $cpu_temp = $sensor_data->{'coretemp-isa-0000'}{'Package id 0'}{temp1_input}; #INTEL CPU
+	# my $cpu_temp = $sensor_data->{'k10temp-pci-00c3'}{'Tctl'}{temp1_input}; #AMD CPU
 
 	$res->{cpu_temp} = $cpu_temp;
 

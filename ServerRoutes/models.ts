@@ -1,4 +1,4 @@
-export interface HomelabStatus {
+export interface baseStatus {
     uptime: string;
     cpuUsage: number;
     cpuTemp: number;
@@ -10,12 +10,15 @@ export interface HomelabStatus {
     freeStorage: number;
     totalStorage: number;
     storageUsage: number;
-    gpu_usage: number
-    gpu_temp: number
     totalLxc: number;
     runningLxc: number;
     totalVms: number;
     runningVms: number;
+}
+
+
+export interface ProdStatus extends baseStatus {
+
 }
 
 export interface vmStatus {

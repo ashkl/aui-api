@@ -12,28 +12,40 @@ interface ENV {
   PORT: number | undefined;
   
   HOME_ASSISTANT_URL: string | undefined;
-  PROXMOX_URL: string | undefined;
   JELLYFIN_URL: string | undefined;
   JOIN_API_URL: string | undefined;
 
   MAPBOX_KEY: string | undefined;
   HOME_ASSISTANT_KEY: string | undefined;
-  PROXMOX_KEY: string | undefined;
-  JELLYFIN_KEY: string | undefined;  
+  JELLYFIN_KEY: string | undefined;
+
+  //PROD PROXMOX
+  PROD_URL: string | undefined;
+  PROD_KEY: string | undefined;
+
+  //NAS PROXMOX
+  NAS_URL: string | undefined;
+  NAS_KEY: string | undefined;
 }
 
 interface Config {
   PORT: number | undefined;
 
   HOME_ASSISTANT_URL: string | undefined;
-  PROXMOX_URL: string | undefined;
   JELLYFIN_URL: string | undefined;
   JOIN_API_URL: string | undefined;
 
   MAPBOX_KEY: string | undefined;
   HOME_ASSISTANT_KEY: string | undefined;
-  PROXMOX_KEY: string | undefined;
   JELLYFIN_KEY: string | undefined;
+
+  //PROD PROXMOX
+  PROD_URL: string | undefined;
+  PROD_KEY: string | undefined;
+
+  //NAS PROXMOX
+  NAS_URL: string | undefined;
+  NAS_KEY: string | undefined;
 }
 
 // Loading process.env as ENV interface
@@ -43,14 +55,20 @@ const getConfig = (): ENV => {
     PORT: process.env.PORT ? Number(process.env.PORT) : undefined,
     
     HOME_ASSISTANT_URL: process.env.HOME_ASSISTANT_URL,
-    PROXMOX_URL: process.env.PROXMOX_URL,
     JELLYFIN_URL: process.env.JELLYFIN_URL,
     JOIN_API_URL: process.env.JOIN_API_URL,
 
     MAPBOX_KEY: process.env.MAPBOX_KEY,
     HOME_ASSISTANT_KEY: process.env.HOME_ASSISTANT_KEY,
-    PROXMOX_KEY: process.env.PROXMOX_KEY,
     JELLYFIN_KEY: process.env.JELLYFIN_KEY,
+
+    //PROD PROXMOX
+    PROD_URL: process.env.PROD_URL,
+    PROD_KEY: process.env.PROD_KEY,
+
+    //NAS PROXMOX
+    NAS_URL: process.env.NAS_URL,
+    NAS_KEY: process.env.NAS_KEY,
   };
 };
 

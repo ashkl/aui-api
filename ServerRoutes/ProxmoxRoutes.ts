@@ -1,31 +1,28 @@
 import express = require("express");
 import { bytesToGB, secondsToDh, fetchProxmoxData, runningStatus } from "./utils";
-import { HomelabStatus, LxcStatus, QemuStatus } from "./models";
+import { ProdStatus, LxcStatus, QemuStatus, baseStatus } from "./models";
 
 const router: express.Router = express();
 
-router.get('/homelabstatus', async (req, res) => {
-
+router.get('/status/:server', async (req, res) => {
     try {
 
-        const hardwaredData = await fetchProxmoxData('/nodes/homelab/status');
-        const lxcData = await fetchProxmoxData('/nodes/homelab/lxc');
-        const vmData = await fetchProxmoxData('/nodes/homelab/qemu');
+        const hardwareData = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/status`);
+        const lxcData = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/lxc`);
+        const vmData = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/qemu`);
     
-        const responseData: HomelabStatus = {
-            uptime: secondsToDh(hardwaredData.uptime),
-            cpuUsage: Math.ceil(hardwaredData.cpu),
-            cpuTemp: hardwaredData.cpu_temp,
-            usedMemory: bytesToGB(hardwaredData.memory.used),
-            freeMemory: bytesToGB(hardwaredData.memory.free),
-            totalMemory: bytesToGB(hardwaredData.memory.total),
-            memoryUsage: +(bytesToGB(hardwaredData.memory.used)/bytesToGB(hardwaredData.memory.total)*100).toFixed(2),
-            usedStorage: bytesToGB(hardwaredData.rootfs.used),
-            freeStorage: bytesToGB(hardwaredData.rootfs.free),
-            totalStorage: bytesToGB(hardwaredData.rootfs.total),
-            storageUsage: +(bytesToGB(hardwaredData.rootfs.used)/bytesToGB(hardwaredData.rootfs.total)*100).toFixed(2),
-            gpu_usage: hardwaredData.gpu.gpu_usage,
-            gpu_temp: hardwaredData.gpu.gpu_temp,
+        const responseData: ProdStatus = {
+            uptime: secondsToDh(hardwareData.uptime),
+            cpuUsage: Math.ceil(hardwareData.cpu),
+            cpuTemp: hardwareData.cpu_temp,
+            usedMemory: bytesToGB(hardwareData.memory.used),
+            freeMemory: bytesToGB(hardwareData.memory.free),
+            totalMemory: bytesToGB(hardwareData.memory.total),
+            memoryUsage: +(bytesToGB(hardwareData.memory.used)/bytesToGB(hardwareData.memory.total)*100).toFixed(2),
+            usedStorage: bytesToGB(hardwareData.rootfs.used),
+            freeStorage: bytesToGB(hardwareData.rootfs.free),
+            totalStorage: bytesToGB(hardwareData.rootfs.total),
+            storageUsage: +(bytesToGB(hardwareData.rootfs.used)/bytesToGB(hardwareData.rootfs.total)*100).toFixed(2),
             totalLxc: lxcData.length,
             runningLxc: runningStatus(lxcData),
             totalVms: vmData.length,
@@ -40,11 +37,11 @@ router.get('/homelabstatus', async (req, res) => {
 
 })
 
-router.get('/lxcstatus/:lxcid', async (req, res) => {
+router.get('/lxcstatus/:server/:lxcid', async (req, res) => {
 
     try {
 
-        const lxcData = await fetchProxmoxData(`/nodes/homelab/lxc/${req.params.lxcid}/status/current`);
+        const lxcData = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/lxc/${req.params.lxcid}/status/current`);
 
         const responseData: LxcStatus = {
             vmid: lxcData.vmid,
@@ -61,11 +58,11 @@ router.get('/lxcstatus/:lxcid', async (req, res) => {
     }
   })
 
-router.get('/lxcstatusall', async (req, res) => {
+router.get('/lxcstatusall/:server', async (req, res) => {
 
     try {
 
-        const lxcData = await fetchProxmoxData(`/nodes/homelab/lxc`);
+        const lxcData = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/lxc`);
         let newLxcData = [];
     
         for (let i=0; i<lxcData.length; i++){
@@ -86,11 +83,11 @@ router.get('/lxcstatusall', async (req, res) => {
     }
 })
 
-router.get('/qemustatus/:qemuid', async (req, res) => {
+router.get('/qemustatus/:server/:qemuid', async (req, res) => {
 
     try {
 
-        const qemuData = await fetchProxmoxData(`/nodes/homelab/qemu/${req.params.qemuid}/status/current`);
+        const qemuData = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/qemu/${req.params.qemuid}/status/current`);
 
         const responseData: QemuStatus = {
             vmid: qemuData.vmid,
@@ -107,11 +104,11 @@ router.get('/qemustatus/:qemuid', async (req, res) => {
     }
 })
 
-router.get('/qemustatusall', async (req, res) => {
+router.get('/qemustatusall/:server', async (req, res) => {
 
     try {
 
-        const qemuData = await fetchProxmoxData(`/nodes/homelab/qemu`);
+        const qemuData = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/qemu`);
         let newLxcData = [];
     
         for (let i=0; i<qemuData.length; i++){
@@ -132,8 +129,8 @@ router.get('/qemustatusall', async (req, res) => {
     }
 })
 
-router.get('/custom', async (req, res) => {
-    const data = await fetchProxmoxData(`/nodes/homelab/qemu`);
+router.get('/:server/custom', async (req, res) => {
+    const data = await fetchProxmoxData(req.params.server,`/nodes/${req.params.server}/storage`);
     res.send(data);
 })
 

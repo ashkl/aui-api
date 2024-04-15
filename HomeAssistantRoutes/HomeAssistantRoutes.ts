@@ -10,13 +10,13 @@ router.get('/homeassistant/power', async (req, res) => {
     try {
      
         const mainPCData = await fetchHomeAssistantData('/states/sensor.main_pc_power');
-        const homelabServerData = await fetchHomeAssistantData('/states/sensor.hl_server_power');
+        const prodData = await fetchHomeAssistantData('/states/sensor.fan_control_power');
         const ogServerData = await fetchHomeAssistantData('/states/sensor.og_server_power');
 
         const responseData = {
             mainPCPower: mainPCData.state,
-            homelabServerPower: homelabServerData.state,
-            ogServerPower: ogServerData.state,
+            prodServerPower: prodData.state,
+            nasServerPower: ogServerData.state,
         }
         res.send(responseData);
         
