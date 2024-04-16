@@ -8,6 +8,7 @@ const jamCamRouter = require('./JamCamRoutes/JamCamRoutes');
 const serverRouter = require('./ServerRoutes/ProxmoxRoutes');
 const homeassistantRouter = require('./HomeAssistantRoutes/HomeAssistantRoutes');
 const jellyfinRouter = require('./JellyFinRoutes/JellyFinRoutes');
+const truenasRouter = require('./StorageRoutes/TruenasRoutes');
 
 const PORT = config.PORT;
 const app: express.Application = express();
@@ -18,6 +19,7 @@ app.use(jamCamRouter);
 app.use(serverRouter);
 app.use(homeassistantRouter);
 app.use(jellyfinRouter);
+app.use(truenasRouter);
 
 app.use(express.json());
 
