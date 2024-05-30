@@ -61,3 +61,39 @@ export async function toggleLight(state:string) {
         }
     }
 }
+
+export async function toggleRoomFan(state:string) {
+    try {
+        let mode = "";
+        
+        if (state == "on") {
+            mode = "off";
+        } else {
+            mode = "on";
+        }
+
+        const data = {
+            entity_id: 'switch.hl_server_socket_1'
+        }
+
+        const apiUrl = `http://${config.HOME_ASSISTANT_URL}/api/services/switch/turn_${mode}`;
+        const authToken = config.HOME_ASSISTANT_KEY;
+
+        await axios.post(apiUrl, data, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        return mode;
+
+    } catch (error) {
+        console.error('Axios request failed:', (error as AxiosError).message);
+
+        if ((error as AxiosError).response) {
+            console.error('Response status:', (error as AxiosError).response?.status);
+            console.error('Response data:', (error as AxiosError).response?.data);
+        }
+    }
+}

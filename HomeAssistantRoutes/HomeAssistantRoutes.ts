@@ -1,7 +1,7 @@
 require('dotenv').config();
 import express = require("express");
 
-import { fetchHomeAssistantData, toggleLight } from "./utils";
+import { fetchHomeAssistantData, toggleLight, toggleRoomFan } from "./utils";
 
 const router: express.Router = express();
 
@@ -48,6 +48,19 @@ router.post('/homeassistant/toggleRoomLight', async (req, res) => {
     try {
         const lightData = await fetchHomeAssistantData('/states/light.room_light');
         const response = await toggleLight(lightData.state);
+
+        res.send(response)
+    } catch (error) {
+        res.status(500).send(error);
+    }
+    
+})
+
+router.post('/homeassistant/toggleRoomFan', async (req, res) => {
+    
+    try {
+        const fanData = await fetchHomeAssistantData('/states/switch.hl_server_socket_1');
+        const response = await toggleRoomFan(fanData.state);
 
         res.send(response)
     } catch (error) {
