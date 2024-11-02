@@ -15,6 +15,11 @@ interface ENV {
   PROD_URL: string | undefined;
   PROD_KEY: string | undefined;
 
+  //SSH PROD PROXMOX
+  PROD_HOSTNAME: string | undefined;
+  PROD_USERNAME: string | undefined;
+  PROD_PASSWORD: string | undefined;
+
   //NAS PROXMOX
   NAS_URL: string | undefined;
   NAS_KEY: string | undefined;
@@ -31,7 +36,7 @@ interface ENV {
   JELLYFIN_URL: string | undefined;
   JOIN_API_URL: string | undefined;
   JELLYFIN_KEY: string | undefined;
-  
+
   //EXTRA
   MAPBOX_KEY: string | undefined;
 }
@@ -43,6 +48,11 @@ interface Config {
   PROD_URL: string | undefined;
   PROD_KEY: string | undefined;
 
+  //SSH PROD PROXMOX
+  PROD_HOSTNAME: string | undefined;
+  PROD_USERNAME: string | undefined;
+  PROD_PASSWORD: string | undefined;
+
   //NAS PROXMOX
   NAS_URL: string | undefined;
   NAS_KEY: string | undefined;
@@ -59,7 +69,7 @@ interface Config {
   JELLYFIN_URL: string | undefined;
   JOIN_API_URL: string | undefined;
   JELLYFIN_KEY: string | undefined;
-  
+
   //EXTRA
   MAPBOX_KEY: string | undefined;
 }
@@ -73,6 +83,11 @@ const getConfig = (): ENV => {
     //PROD PROXMOX
     PROD_URL: process.env.PROD_URL,
     PROD_KEY: process.env.PROD_KEY,
+
+    //SSH PROD PROXMOX
+    PROD_HOSTNAME: process.env.PROD_HOSTNAME,
+    PROD_USERNAME: process.env.PROD_USERNAME,
+    PROD_PASSWORD: process.env.PROD_PASSWORD,
 
     //NAS PROXMOX
     NAS_URL: process.env.NAS_URL,
@@ -96,10 +111,10 @@ const getConfig = (): ENV => {
   };
 };
 
-// Throwing an Error if any field was undefined we don't 
-// want our app to run if it can't connect to DB and ensure 
+// Throwing an Error if any field was undefined we don't
+// want our app to run if it can't connect to DB and ensure
 // that these fields are accessible. If all is good return
-// it as Config which just removes the undefined from our type 
+// it as Config which just removes the undefined from our type
 // definition.
 
 const getSanitzedConfig = (config: ENV): Config => {

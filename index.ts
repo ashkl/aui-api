@@ -1,14 +1,14 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 import config from "./config";
-dotenv.config()
+dotenv.config();
 import express = require("express");
 import bodyParser = require("body-parser");
 
-const jamCamRouter = require('./JamCamRoutes/JamCamRoutes');
-const serverRouter = require('./ServerRoutes/ProxmoxRoutes');
-const homeassistantRouter = require('./HomeAssistantRoutes/HomeAssistantRoutes');
-const jellyfinRouter = require('./JellyFinRoutes/JellyFinRoutes');
-const truenasRouter = require('./StorageRoutes/TruenasRoutes');
+const jamCamRouter = require("./JamCamRoutes/JamCamRoutes");
+const serverRouter = require("./ServerRoutes/ProxmoxRoutes");
+const homeassistantRouter = require("./HomeAssistantRoutes/HomeAssistantRoutes");
+const jellyfinRouter = require("./JellyFinRoutes/JellyFinRoutes");
+const truenasRouter = require("./StorageRoutes/TruenasRoutes");
 
 const PORT = config.PORT;
 const app: express.Application = express();
@@ -24,5 +24,5 @@ app.use(truenasRouter);
 app.use(express.json());
 
 app.listen(PORT, function () {
-    console.log(`Running on port: ${PORT}`);
-})
+  console.log(`Running on port: ${PORT}`);
+});

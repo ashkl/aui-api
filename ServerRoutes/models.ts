@@ -18,7 +18,11 @@ export interface baseStatus {
 
 
 export interface ProdStatus extends baseStatus {
-
+    gpu: {
+        gpu_3d: number;
+        gpu_video: number;
+        gpu_video_enhance: number;
+    }
 }
 
 export interface vmStatus {
