@@ -94,6 +94,15 @@ router.post("/homeassistant/roomLightColour", async (req, res) => {
   }
 });
 
+router.post("/homeassistant/roomLightColourTemp", async (req, res) => {
+  try {
+    const response = await changeColourTemp(2000, 4);
+    res.send(response);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 router.post("/homeassistant/toggleRoomFan", async (req, res) => {
   try {
     const fanData = await fetchHomeAssistantData(
