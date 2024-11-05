@@ -129,7 +129,7 @@ export async function changeColour(red: number, green: number, blue: number) {
   }
 }
 
-export async function changeColourTemp() {
+export async function changeColourTemp(kelvin: number, brightness: number) {
   try {
     const data = {
       entity_id: "light.smart_ceiling_light",

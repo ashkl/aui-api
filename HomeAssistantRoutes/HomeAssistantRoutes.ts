@@ -1,7 +1,14 @@
 require("dotenv").config();
 import express = require("express");
 
-import { fetchHomeAssistantData, toggleLight, toggleRoomFan } from "./utils";
+import {
+  changeColour,
+  changeColourTemp,
+  fetchHomeAssistantData,
+  rgbOnly,
+  toggleLight,
+  toggleRoomFan,
+} from "./utils";
 
 const router: express.Router = express();
 
@@ -10,11 +17,14 @@ router.get("/homeassistant/power", async (req, res) => {
     const mainPCData = await fetchHomeAssistantData(
       "/states/sensor.main_pc_power"
     );
+    const mainPCAccData = await fetchHomeAssistantData(
+      "/states/sensor.pc_acc_power"
+    );
     const serverRackData = await fetchHomeAssistantData(
       "/states/sensor.server_rack_power"
     );
     const prodData = await fetchHomeAssistantData(
-      "/states/sensor.fan_control_power"
+      "/states/sensor.pve_prod_power"
     );
     const ogServerData = await fetchHomeAssistantData(
       "/states/sensor.pve_nas_power"
@@ -22,6 +32,7 @@ router.get("/homeassistant/power", async (req, res) => {
 
     const responseData = {
       mainPCPower: mainPCData.state,
+      mainPCAccData: mainPCAccData.state,
       serverRackData: serverRackData.state,
       prodServerPower: prodData.state,
       nasServerPower: ogServerData.state,
@@ -35,15 +46,20 @@ router.get("/homeassistant/power", async (req, res) => {
 router.get("/homeassistant/roomTemp", async (req, res) => {
   try {
     const tempData = await fetchHomeAssistantData(
-      "/states/sensor.wifi_temperature_humidity_sensor_temperature"
+      "/states/sensor.room_sensor_temperature"
     );
     const humidityData = await fetchHomeAssistantData(
-      "/states/sensor.wifi_temperature_humidity_sensor_humidity"
+      "/states/sensor.room_sensor_humidity"
+    );
+
+    const windowState = await fetchHomeAssistantData(
+      "/states/binary_sensor.bedroom_trv_window"
     );
 
     const responseData = {
       temp: tempData.state,
       humidity: humidityData.state,
+      window: windowState.state,
     };
 
     res.send(responseData);
