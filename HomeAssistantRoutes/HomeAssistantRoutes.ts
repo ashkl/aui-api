@@ -31,11 +31,46 @@ router.get("/homeassistant/power", async (req, res) => {
     );
 
     const responseData = {
-      mainPCPower: mainPCData.state,
-      mainPCAccData: mainPCAccData.state,
-      serverRackData: serverRackData.state,
-      prodServerPower: prodData.state,
-      nasServerPower: ogServerData.state,
+      bedroom: {
+        mainPCPower: mainPCData.state,
+        mainPCAccData: mainPCAccData.state,
+      },
+      serverCloset: {
+        serverRackData: serverRackData.state,
+        prodServerPower: prodData.state,
+        nasServerPower: ogServerData.state,
+      },
+    };
+    res.send(responseData);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+router.get("/homeassistant/housePower", async (req, res) => {
+  try {
+    const gridPower = await fetchHomeAssistantData(
+      "/states/sensor.dcc_sourced_smart_electricity_meter_usage_today"
+    );
+    const gridCost = await fetchHomeAssistantData(
+      "/states/sensor.dcc_sourced_smart_electricity_meter_cost_today"
+    );
+    const gasPower = await fetchHomeAssistantData(
+      "/states/sensor.dcc_sourced_smart_gas_meter_usage_today"
+    );
+    const gasCost = await fetchHomeAssistantData(
+      "/states/sensor.dcc_sourced_smart_gas_meter_cost_today"
+    );
+
+    const responseData = {
+      grid: {
+        gridPower: gridPower.state,
+        gridCost: gridCost.state,
+      },
+      gas: {
+        gasPower: gasPower.state,
+        gasCost: gasCost.state,
+      },
     };
     res.send(responseData);
   } catch (error) {
