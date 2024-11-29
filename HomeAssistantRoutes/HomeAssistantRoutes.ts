@@ -32,13 +32,13 @@ router.get("/homeassistant/power", async (req, res) => {
 
     const responseData = {
       bedroom: {
-        mainPCPower: mainPCData.state,
-        mainPCAccData: mainPCAccData.state,
+        mainPCPower: Number(mainPCData.state),
+        mainPCAccData: Number(mainPCAccData.state),
       },
       serverCloset: {
-        serverRackData: serverRackData.state,
-        prodServerPower: prodData.state,
-        nasServerPower: ogServerData.state,
+        serverRackData: Number(serverRackData.state),
+        prodServerPower: Number(prodData.state),
+        nasServerPower: Number(ogServerData.state),
       },
     };
     res.send(responseData);
@@ -64,12 +64,12 @@ router.get("/homeassistant/housePower", async (req, res) => {
 
     const responseData = {
       grid: {
-        gridPower: gridPower.state,
-        gridCost: gridCost.state,
+        gridPower: Number(gridPower.state),
+        gridCost: Number(gridCost.state),
       },
       gas: {
-        gasPower: gasPower.state,
-        gasCost: gasCost.state,
+        gasPower: Number(gasPower.state),
+        gasCost: Number(gasCost.state),
       },
     };
     res.send(responseData);
