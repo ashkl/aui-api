@@ -7,7 +7,7 @@ import {
   fetchHomeAssistantData,
   rgbOnly,
   toggleLight,
-  toggleRoomFan,
+  toggleItem,
 } from "./utils";
 
 const router: express.Router = express();
@@ -168,7 +168,23 @@ router.post("/homeassistant/toggleRoomFan", async (req, res) => {
     const fanData = await fetchHomeAssistantData(
       "/states/switch.hl_server_socket_1"
     );
-    const response = await toggleRoomFan(fanData.state);
+    const response = await toggleItem(
+      fanData.state,
+      "switch.hl_server_socket_1"
+    );
+
+    res.send(response);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+router.post("/homeassistant/toggleRoomHeater", async (req, res) => {
+  try {
+    const fanData = await fetchHomeAssistantData(
+      "/states/switch.heater_socket_1"
+    );
+    const response = await toggleItem(fanData.state, "switch.heater_socket_1");
 
     res.send(response);
   } catch (error) {

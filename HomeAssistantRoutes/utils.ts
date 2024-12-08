@@ -157,7 +157,7 @@ export async function changeColourTemp(kelvin: number, brightness: number) {
   }
 }
 
-export async function toggleRoomFan(state: string) {
+export async function toggleItem(state: string, entityId: string) {
   try {
     let mode = "";
 
@@ -168,7 +168,7 @@ export async function toggleRoomFan(state: string) {
     }
 
     const data = {
-      entity_id: "switch.hl_server_socket_1",
+      entity_id: entityId,
     };
 
     const apiUrl = `http://${config.HOME_ASSISTANT_URL}/api/services/switch/turn_${mode}`;
