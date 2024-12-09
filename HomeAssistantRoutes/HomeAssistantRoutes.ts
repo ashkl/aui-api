@@ -89,6 +89,9 @@ router.get("/homeassistant/network", async (req, res) => {
     const networkUpload = await fetchHomeAssistantData(
       "/states/sensor.speedtest_upload"
     );
+    const networkDevices = await fetchHomeAssistantData(
+      "/states/sensor.network_scanner"
+    );
 
     const responseData = {
       networkSpeed: {
@@ -96,7 +99,12 @@ router.get("/homeassistant/network", async (req, res) => {
         download: Number(networkDownload.state),
         upload: Number(networkUpload.state),
       },
+      connectedDevices: {
+        currentlyConnected: networkDevices.state,
+        devices: networkDevices.attributes.devices,
+      },
     };
+    console.log(networkDevices.devices);
     res.send(responseData);
   } catch (error) {
     res.status(500).send(error);
