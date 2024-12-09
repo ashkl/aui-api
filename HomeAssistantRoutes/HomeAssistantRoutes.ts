@@ -78,6 +78,31 @@ router.get("/homeassistant/housePower", async (req, res) => {
   }
 });
 
+router.get("/homeassistant/network", async (req, res) => {
+  try {
+    const networkPing = await fetchHomeAssistantData(
+      "/states/sensor.speedtest_ping"
+    );
+    const networkDownload = await fetchHomeAssistantData(
+      "/states/sensor.speedtest_download"
+    );
+    const networkUpload = await fetchHomeAssistantData(
+      "/states/sensor.speedtest_upload"
+    );
+
+    const responseData = {
+      networkSpeed: {
+        ping: Number(networkPing.state),
+        download: Number(networkDownload.state),
+        upload: Number(networkUpload.state),
+      },
+    };
+    res.send(responseData);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 router.get("/homeassistant/roomTemp", async (req, res) => {
   try {
     const tempData = await fetchHomeAssistantData(
