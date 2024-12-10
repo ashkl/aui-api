@@ -1,6 +1,8 @@
 var axios = require("axios");
 import { AxiosError } from "axios";
 import config from "../config";
+import { fetchHomeAssistantData } from "../HomeAssistantRoutes/utils";
+import { NetworkRes } from "./models";
 
 export async function fetchProxmoxData(server: string, url: string) {
   let SERVER_URL;
@@ -36,6 +38,62 @@ export async function fetchProxmoxData(server: string, url: string) {
       console.error("Response data:", (error as AxiosError).response?.data);
     }
   }
+}
+
+export async function getLxcMacIpAddr(server: string, vmid: string) {
+  let SERVER_URL;
+  let SERVER_KEY;
+
+  if (server === "prod") {
+    SERVER_URL = config.PROD_URL;
+    SERVER_KEY = config.PROD_KEY;
+  } else {
+    SERVER_URL = config.NAS_URL;
+    SERVER_KEY = config.NAS_KEY;
+  }
+
+  try {
+    const apiUrl = `https://${SERVER_URL}/api2/json/nodes/${server}/lxc/${vmid}/config`;
+    const authToken = SERVER_KEY;
+
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+    const response = await axios.get(apiUrl, {
+      headers: {
+        Authorization: `PVEAPIToken=${authToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const macAddr = extractMacAddress(response.data.data.net0);
+
+    const networkResponse = await fetchHomeAssistantData(
+      "/states/sensor.network_scanner"
+    );
+
+    const networkDevices = networkResponse.attributes.devices;
+
+    let ipAddr;
+
+    for (let i = 0; i < networkDevices.length; i++) {
+      if (networkDevices[i].mac === macAddr) {
+        ipAddr = networkDevices[i].ip || "";
+      }
+    }
+
+    const networkRes: NetworkRes = {
+      ip: ipAddr || "XXX.XXX.X.XXX",
+      mac: macAddr || "XX:XX:XX:XX:XX:XX",
+    };
+
+    return networkRes;
+  } catch (error) {
+    console.error("Axios request failed:", (error as AxiosError).message);
+  }
+}
+
+function extractMacAddress(config: string): string | null {
+  const match = config.match(/hwaddr=([0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5})/);
+  return match ? match[1] : "";
 }
 
 export async function getGPUData() {

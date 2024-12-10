@@ -5,8 +5,9 @@ import {
   fetchProxmoxData,
   runningStatus,
   getGPUData,
+  getLxcMacIpAddr,
 } from "./utils";
-import { ProdStatus, LxcStatus, QemuStatus, baseStatus } from "./models";
+import { ProdStatus, LxcStatus, QemuStatus, NetworkRes } from "./models";
 import {
   sshConnectAndDownload,
   sshConnectAndExecute,
@@ -100,9 +101,16 @@ router.get("/lxcstatusall/:server", async (req, res) => {
     let newLxcData = [];
 
     for (let i = 0; i < lxcData.length; i++) {
+      const macIp: NetworkRes | undefined = await getLxcMacIpAddr(
+        req.params.server,
+        lxcData[i].vmid
+      );
+
       const newData: LxcStatus = {
         vmid: lxcData[i].vmid,
         name: lxcData[i].name,
+        ip: macIp?.ip || "XXX.XXX.X.XXX",
+        mac: macIp?.mac || "XX:XX:XX:XX:XX:XX",
         status: lxcData[i].status,
         cpuUseage: +lxcData[i].cpu.toFixed(2),
         memoryUseage: +((lxcData[i].mem / lxcData[i].maxmem) * 100).toFixed(2),
@@ -169,7 +177,7 @@ router.get("/qemustatusall/:server", async (req, res) => {
 router.get("/:server/custom", async (req, res) => {
   const data = await fetchProxmoxData(
     req.params.server,
-    `/nodes/${req.params.server}/storage`
+    `/nodes/prod/lxc/102/config`
   );
   res.send(data);
 });
