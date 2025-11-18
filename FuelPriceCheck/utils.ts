@@ -1,11 +1,25 @@
 import axios, { AxiosError } from "axios";
 import config from "../config";
-import { FuelStation, FuelPriceApiResponse } from "./models";
+import {
+  FuelStation,
+  FuelPriceApiResponse,
+  FuelPriceTrend,
+  FuelPrices,
+} from "./models";
 
 const API_BASE_URL =
   "https://uk-daily-fuel-prices.p.rapidapi.com/api/petrol-prices";
 const API_HOST = "uk-daily-fuel-prices.p.rapidapi.com";
 const REQUEST_TIMEOUT = 10000; // 10 seconds
+
+const MAX_PRICE_HISTORY = 20;
+
+interface PriceHistoryEntry {
+  timestamp: number;
+  prices: FuelPrices;
+}
+
+const stationPriceHistory = new Map<string, PriceHistoryEntry[]>();
 
 /**
  * Calculate the distance between two coordinates using the Haversine formula
@@ -93,6 +107,292 @@ function getBrandPriority(brand: string | undefined): number {
   return 4;
 }
 
+const ADDRESS_KEYWORDS = [
+  "RETAIL PARK",
+  "SERVICE STATION",
+  "SERVICES",
+  "FORECOURT",
+  "CENTRE",
+  "CENTER",
+  "HIGH ROAD",
+  "HIGH STREET",
+  "ROAD",
+  "RD",
+  "STREET",
+  "ST",
+  "LANE",
+  "LN",
+  "AVENUE",
+  "AVE",
+  "WAY",
+  "DRIVE",
+  "DR",
+  "CLOSE",
+  "PLACE",
+  "COURT",
+  "SQUARE",
+  "PARK",
+  "GATE",
+];
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const BRAND_PREFIXES = [
+  "TESCO",
+  "TESCO STORES",
+  "TESCO STORES LTD",
+  "TESCO STORE LTD",
+  "TESCO PETROL FILLING STATION",
+  "TESCO FILLING STATION",
+  "TESCO PETROL STATION",
+  "ESSO",
+  "ESSO PETROL STATION",
+  "ESSO FILLING STATION",
+  "SHELL",
+  "SHELL PETROL STATION",
+  "SHELL FILLING STATION",
+  "BP",
+  "ASDA",
+  "MORRISONS",
+  "SAINSBURY",
+];
+
+const GENERIC_PREFIXES = [
+  "STORES",
+  "STORES LTD",
+  "STORE",
+  "LIMITED",
+  "LTD",
+  "PETROL FILLING STATION",
+  "PETROL STATION",
+  "FILLING STATION",
+  "FILLING STA",
+  "SERVICE STATION",
+  "AUTOMOBILE ASSOCIATION",
+];
+
+function stripPrefixes(address: string, brand?: string): string {
+  let text = address.trim();
+  const patterns = new Set<string>();
+
+  if (brand) {
+    patterns.add(brand.toUpperCase());
+  }
+
+  BRAND_PREFIXES.forEach((p) => patterns.add(p.toUpperCase()));
+  GENERIC_PREFIXES.forEach((p) => patterns.add(p.toUpperCase()));
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const pattern of patterns) {
+      const regex = new RegExp(`^${escapeRegExp(pattern)}\\b[\\s,./-]*`, "i");
+      if (regex.test(text)) {
+        text = text.replace(regex, "").trim();
+        changed = true;
+      }
+    }
+  }
+
+  return text;
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (match) => match.toUpperCase())
+    .replace(
+      /\b(A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z)(\d+)/g,
+      (_, letter, digits) => `${letter.toUpperCase()}${digits}`
+    );
+}
+
+function createShortAddress(
+  address?: string,
+  brand?: string
+): string | undefined {
+  if (!address) {
+    return undefined;
+  }
+
+  let working = stripPrefixes(address, brand);
+
+  // Remove leading numbers and punctuation (house number)
+  working = working.replace(/^[0-9#,\-/\s]+/, "").trim();
+
+  if (!working) {
+    return undefined;
+  }
+
+  const sortedKeywords = [...ADDRESS_KEYWORDS].sort(
+    (a, b) => b.length - a.length
+  );
+
+  for (const keyword of sortedKeywords) {
+    const pattern = keyword
+      .split(/\s+/)
+      .map((word) => escapeRegExp(word))
+      .join("\\s+");
+    const regex = new RegExp(`\\b${pattern}\\b`, "i");
+    const match = working.match(regex);
+    if (match && typeof match.index === "number") {
+      const end = match.index + match[0].length;
+      const segment = working.slice(0, end).trim();
+      if (segment.length > 0) {
+        return toTitleCase(segment);
+      }
+    }
+  }
+
+  // Fallback: use text before first comma
+  const commaIndex = working.indexOf(",");
+  if (commaIndex !== -1) {
+    return toTitleCase(working.slice(0, commaIndex).trim());
+  }
+
+  // Fallback: first 3 words
+  const words = working.split(/\s+/);
+  const fallback = words.slice(0, Math.min(3, words.length)).join(" ");
+  return toTitleCase(fallback);
+}
+
+function parseLastUpdated(dateString?: string): Date | null {
+  if (!dateString) {
+    return null;
+  }
+
+  // Expected format: DD/MM/YYYY HH:mm:ss
+  const match = dateString.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
+  );
+
+  if (!match) {
+    const parsed = new Date(dateString);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const [, dd, mm, yyyy, hh, min, ss] = match;
+  const date = new Date(
+    Number(yyyy),
+    Number(mm) - 1,
+    Number(dd),
+    Number(hh),
+    Number(min),
+    Number(ss)
+  );
+
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+
+  const seconds = Math.max(0, Math.floor(diffMs / 1000));
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) {
+    return days === 1 ? "Updated 1 day ago" : `Updated ${days} days ago`;
+  }
+  if (hours > 0) {
+    return hours === 1 ? "Updated 1 hour ago" : `Updated ${hours} hours ago`;
+  }
+  if (minutes > 0) {
+    return minutes === 1 ? "Updated 1 min ago" : `Updated ${minutes} mins ago`;
+  }
+  return "Updated just now";
+}
+
+const BASE_DRIVE_DELAY_MINUTES = 3; // time for getting into car, lights, junctions
+const AVERAGE_DRIVING_SPEED_KMH = 30; // realistic urban speed incl. junctions
+
+function estimateDriveTimeMinutes(distanceKm: number): number | undefined {
+  if (!isFinite(distanceKm) || distanceKm < 0) {
+    return undefined;
+  }
+
+  const travelMinutes = (distanceKm / AVERAGE_DRIVING_SPEED_KMH) * 60;
+  const totalMinutes = BASE_DRIVE_DELAY_MINUTES + travelMinutes;
+  return Math.max(2, Math.round(totalMinutes));
+}
+
+function diff(current?: number, previous?: number): number | undefined {
+  if (
+    typeof current !== "number" ||
+    !isFinite(current) ||
+    typeof previous !== "number" ||
+    !isFinite(previous)
+  ) {
+    return undefined;
+  }
+
+  const delta = Number((current - previous).toFixed(1));
+  return delta === 0 ? 0 : delta;
+}
+
+function recordPriceTrend(
+  siteId: string,
+  prices: FuelPrices,
+  lastUpdated?: Date | null
+): FuelPriceTrend | undefined {
+  if (!siteId) {
+    return undefined;
+  }
+
+  const timestamp = (lastUpdated ?? new Date()).getTime();
+  const history = stationPriceHistory.get(siteId) ?? [];
+  const previous = history[history.length - 1];
+
+  const entry: PriceHistoryEntry = {
+    timestamp,
+    prices: { ...prices },
+  };
+
+  history.push(entry);
+  if (history.length > MAX_PRICE_HISTORY) {
+    history.shift();
+  }
+  stationPriceHistory.set(siteId, history);
+
+  if (!previous) {
+    return undefined;
+  }
+
+  const e5Change = diff(prices.E5, previous.prices.E5);
+  const e10Change = diff(prices.E10, previous.prices.E10);
+  const b7Change = diff(prices.B7, previous.prices.B7);
+
+  const primaryChange =
+    e5Change ??
+    e10Change ??
+    b7Change ??
+    (typeof prices.E5 === "number" ? 0 : undefined);
+
+  const direction =
+    typeof primaryChange === "number"
+      ? primaryChange > 0
+        ? "up"
+        : primaryChange < 0
+        ? "down"
+        : "flat"
+      : "flat";
+
+  const sampleHours = Number(
+    ((timestamp - previous.timestamp) / (1000 * 60 * 60)).toFixed(1)
+  );
+
+  return {
+    direction: direction as FuelPriceTrend["direction"],
+    e5Change,
+    e10Change,
+    b7Change,
+    sampleHours,
+  };
+}
+
 /**
  * Sort fuel price data by distance from the given coordinates
  * Handles both direct arrays and objects containing arrays (e.g., { data: [...] })
@@ -155,10 +455,26 @@ export function sortByDistance(
   const sortedStations = stations
     .map((station: any) => {
       const coords = extractCoordinates(station);
+      const shortAddress = createShortAddress(station.address, station.brand);
+      const lastUpdatedDate = parseLastUpdated(station.last_updated);
+      const lastUpdatedRelative = lastUpdatedDate
+        ? formatRelativeTime(lastUpdatedDate)
+        : undefined;
+      const priceTrend = recordPriceTrend(
+        station.site_id,
+        station.prices,
+        lastUpdatedDate
+      );
 
       if (!coords) {
         // If coordinates are missing, assign a very large distance
-        return { ...station, distance: Infinity };
+        return {
+          ...station,
+          distance: Infinity,
+          shortAddress,
+          lastUpdatedRelative,
+          priceTrend,
+        };
       }
 
       const distance = calculateDistance(
@@ -167,7 +483,21 @@ export function sortByDistance(
         coords.lat,
         coords.lon
       );
-      return { ...station, distance: Number(distance.toFixed(2)) };
+      const distanceKm = Number(distance.toFixed(2));
+      const estimatedDriveTimeMinutes = estimateDriveTimeMinutes(distanceKm);
+      const navigationLink = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+        `${userLat},${userLon}`
+      )}&destination=${encodeURIComponent(`${coords.lat},${coords.lon}`)}`;
+
+      return {
+        ...station,
+        distance: distanceKm,
+        shortAddress,
+        lastUpdatedRelative,
+        estimatedDriveTimeMinutes,
+        navigationLink,
+        priceTrend,
+      };
     })
     .sort((a, b) => {
       // First sort by brand preference (Tesco > Shell > Esso > Others)
