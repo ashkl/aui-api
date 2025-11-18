@@ -9,6 +9,7 @@ const serverRouter = require("./ServerRoutes/ProxmoxRoutes");
 const homeassistantRouter = require("./HomeAssistantRoutes/HomeAssistantRoutes");
 const jellyfinRouter = require("./JellyFinRoutes/JellyFinRoutes");
 const truenasRouter = require("./StorageRoutes/TruenasRoutes");
+const fuelPriceRouter = require("./FuelPriceCheck/FuelPriceCheck");
 
 const PORT = config.PORT;
 const app: express.Application = express();
@@ -20,6 +21,7 @@ app.use(serverRouter);
 app.use(homeassistantRouter);
 app.use(jellyfinRouter);
 app.use(truenasRouter);
+app.use(fuelPriceRouter);
 
 app.use(express.json());
 

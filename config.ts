@@ -39,6 +39,7 @@ interface ENV {
 
   //EXTRA
   MAPBOX_KEY: string | undefined;
+  RAPIDAPI_KEY: string | undefined;
 }
 
 interface Config {
@@ -72,6 +73,7 @@ interface Config {
 
   //EXTRA
   MAPBOX_KEY: string | undefined;
+  RAPIDAPI_KEY: string | undefined;
 }
 
 // Loading process.env as ENV interface
@@ -108,6 +110,7 @@ const getConfig = (): ENV => {
 
     //EXTRA
     MAPBOX_KEY: process.env.MAPBOX_KEY,
+    RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
   };
 };
 
