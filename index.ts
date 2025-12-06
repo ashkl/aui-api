@@ -10,7 +10,7 @@ const homeassistantRouter = require("./HomeAssistantRoutes/HomeAssistantRoutes")
 const jellyfinRouter = require("./JellyFinRoutes/JellyFinRoutes");
 const truenasRouter = require("./StorageRoutes/TruenasRoutes");
 const fuelPriceRouter = require("./FuelPriceCheck/FuelPriceCheck");
-
+const pcDataRouter = require("./PCDataRoutes/PCDataRoutes");
 const PORT = config.PORT;
 const app: express.Application = express();
 
@@ -22,7 +22,7 @@ app.use(homeassistantRouter);
 app.use(jellyfinRouter);
 app.use(truenasRouter);
 app.use(fuelPriceRouter);
-
+app.use(pcDataRouter);
 app.use(express.json());
 
 app.listen(PORT, function () {

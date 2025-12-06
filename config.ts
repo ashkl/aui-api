@@ -40,6 +40,9 @@ interface ENV {
   //EXTRA
   MAPBOX_KEY: string | undefined;
   RAPIDAPI_KEY: string | undefined;
+
+  MAIN_PC: string | undefined;
+  GAMING_PC: string | undefined;
 }
 
 interface Config {
@@ -74,6 +77,9 @@ interface Config {
   //EXTRA
   MAPBOX_KEY: string | undefined;
   RAPIDAPI_KEY: string | undefined;
+
+  MAIN_PC: string | undefined;
+  GAMING_PC: string | undefined;
 }
 
 // Loading process.env as ENV interface
@@ -111,6 +117,9 @@ const getConfig = (): ENV => {
     //EXTRA
     MAPBOX_KEY: process.env.MAPBOX_KEY,
     RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
+
+    MAIN_PC: process.env.MAIN_PC,
+    GAMING_PC: process.env.GAMING_PC,
   };
 };
 
