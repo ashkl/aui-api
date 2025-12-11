@@ -17,6 +17,9 @@ router.get("/homeassistant/power", async (req, res) => {
     const mainPCData = await fetchHomeAssistantData(
       "/states/sensor.main_pc_power"
     );
+    const mainGamingPCData = await fetchHomeAssistantData(
+      "/states/sensor.smart_plug_4_power"
+    );
     const mainPCAccData = await fetchHomeAssistantData(
       "/states/sensor.pc_acc_power"
     );
@@ -39,6 +42,7 @@ router.get("/homeassistant/power", async (req, res) => {
         serverRackData: Number(serverRackData.state),
         prodServerPower: Number(prodData.state),
         nasServerPower: Number(ogServerData.state),
+        gamingPCPower: Number(mainGamingPCData.state),
       },
     };
     res.send(responseData);
